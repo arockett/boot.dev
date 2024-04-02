@@ -1,3 +1,3 @@
-# bookbot
+# boot.dev
 
-Analyze an entire book and print out an interesting statistical report.
+Projects from https://www.boot.dev
