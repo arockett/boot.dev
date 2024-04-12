@@ -10,28 +10,22 @@ def split_nodes_delimiter(
         text_type: str
     ) -> list[TextNode]:
 
-    def split_next(node: TextNode) -> list[TextNode]:
-        parts = node.text.split(delimiter, 2)
-        if len(parts) == 1:
-            return [node]
-        if len(parts) != 3:
-            raise Exception(f"Missing closing delimiter: {delimiter}")
-        nodes = []
-        if len(parts[0]) > 0:
-            nodes.append(TextNode(parts[0], text_type_text))
-        if len(parts[1]) > 0:
-            nodes.append(TextNode(parts[1], text_type))
-        if len(parts[2]) > 0:
-            nodes.append(TextNode(parts[2], text_type_text))
-        result = nodes[:-1]
-        result.extend(split_next(nodes[-1]))
-        return result
-
-    split_nodes = []
-    for node in old_nodes:
-        if node.text_type == text_type_text:
-            split_nodes.extend(split_next(node))
-        else:
-            split_nodes.append(node)
-    return split_nodes
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes.append(old_node)
+            continue
+        split_nodes = []
+        sections = old_node.text.split(delimiter)
+        if len(sections) % 2 == 0:
+            raise ValueError("Invalid markdown, formatted section not closed")
+        for i in range(len(sections)):
+            if sections[i] == "":
+                continue
+            if i % 2 == 0:
+                split_nodes.append(TextNode(sections[i], text_type_text))
+            else:
+                split_nodes.append(TextNode(sections[i], text_type))
+        new_nodes.extend(split_nodes)
+    return new_nodes
 
