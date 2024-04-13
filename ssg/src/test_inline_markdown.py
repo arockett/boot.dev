@@ -7,7 +7,11 @@ from textnode import (
     text_type_code,
 )
 
-from inline_markdown import split_nodes_delimiter
+from inline_markdown import (
+    extract_markdown_images,
+    extract_markdown_links,
+    split_nodes_delimiter,
+)
 
 
 class TestInlineMarkdown(unittest.TestCase):
@@ -60,6 +64,62 @@ class TestInlineMarkdown(unittest.TestCase):
                 TextNode("`Text with multiple` types of ", text_type_text),
                 TextNode("blocks", text_type_italic),
             ]
+        )
+
+    def test_extract_image(self):
+        text = "![alt text](./image-link)"
+        self.assertEqual(
+            extract_markdown_images(text),
+            [("alt text", "./image-link")]
+        )
+
+    def test_extract_multiple_images(self):
+        text = "![alt text](./image-link) and ![another](./image)"
+        self.assertEqual(
+            extract_markdown_images(text),
+            [
+                ("alt text", "./image-link"),
+                ("another", "./image"),
+            ]
+        )
+
+    def test_no_images(self):
+        text = "This text has no images"
+        self.assertEqual(extract_markdown_images(text), [])
+
+    def test_extract_images_skips_links(self):
+        text = "![alt text](./image-link) and [link](./link)"
+        self.assertEqual(
+            extract_markdown_images(text),
+            [("alt text", "./image-link")]
+        )
+
+    def test_extract_link(self):
+        text = "[link text](./link)"
+        self.assertEqual(
+            extract_markdown_links(text),
+            [("link text", "./link")]
+        )
+
+    def test_extract_multiple_links(self):
+        text = "[link text](./link) and [another](http://)"
+        self.assertEqual(
+            extract_markdown_links(text),
+            [
+                ("link text", "./link"),
+                ("another", "http://"),
+            ]
+        )
+
+    def test_no_links(self):
+        text = "This text has no links"
+        self.assertEqual(extract_markdown_links(text), [])
+
+    def test_extract_links_skips_images(self):
+        text = "[link text](./link) and ![image](http://)"
+        self.assertEqual(
+            extract_markdown_links(text),
+            [("link text", "./link")]
         )
 
 
