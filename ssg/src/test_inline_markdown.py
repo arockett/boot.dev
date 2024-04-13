@@ -5,12 +5,16 @@ from textnode import (
     text_type_bold,
     text_type_italic,
     text_type_code,
+    text_type_image,
+    text_type_link,
 )
 
 from inline_markdown import (
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
 )
 
 
@@ -62,6 +66,18 @@ class TestInlineMarkdown(unittest.TestCase):
             split_nodes_delimiter([node], "*", text_type_italic),
             [
                 TextNode("`Text with multiple` types of ", text_type_text),
+                TextNode("blocks", text_type_italic),
+            ]
+        )
+        self.assertEqual(
+            split_nodes_delimiter(
+                split_nodes_delimiter([node], "*", text_type_italic),
+                "`",
+                text_type_code,
+            ),
+            [
+                TextNode("Text with multiple", text_type_code),
+                TextNode(" types of ", text_type_text),
                 TextNode("blocks", text_type_italic),
             ]
         )
@@ -121,6 +137,70 @@ class TestInlineMarkdown(unittest.TestCase):
             extract_markdown_links(text),
             [("link text", "./link")]
         )
+
+    def test_split_image_node(self):
+        node = TextNode(
+            "This has one ![image](./image)",
+            text_type_text
+        )
+        self.assertEqual(
+            split_nodes_image([node]),
+            [
+                TextNode("This has one ", text_type_text),
+                TextNode("image", text_type_image, "./image")
+            ]
+        )
+
+    def test_split_image_nodes(self):
+        node = TextNode(
+            "![image one](./image) and ![image two](./image2)?",
+            text_type_text
+        )
+        self.assertEqual(
+            split_nodes_image([node]),
+            [
+                TextNode("image one", text_type_image, "./image"),
+                TextNode(" and ", text_type_text),
+                TextNode("image two", text_type_image, "./image2"),
+                TextNode("?", text_type_text)
+            ]
+        )
+
+    def test_split_no_image_node(self):
+        node = TextNode("no images here", text_type_text)
+        self.assertEqual(split_nodes_image([node]), [node])
+
+    def test_split_link_node(self):
+        node = TextNode(
+            "This has one [link](./link)",
+            text_type_text
+        )
+        self.assertEqual(
+            split_nodes_link([node]),
+            [
+                TextNode("This has one ", text_type_text),
+                TextNode("link", text_type_link, "./link")
+            ]
+        )
+
+    def test_split_link_nodes(self):
+        node = TextNode(
+            "[link one](./link) and [link two](./link2)?",
+            text_type_text
+        )
+        self.assertEqual(
+            split_nodes_link([node]),
+            [
+                TextNode("link one", text_type_link, "./link"),
+                TextNode(" and ", text_type_text),
+                TextNode("link two", text_type_link, "./link2"),
+                TextNode("?", text_type_text)
+            ]
+        )
+
+    def test_split_no_link_node(self):
+        node = TextNode("no links here", text_type_text)
+        self.assertEqual(split_nodes_link([node]), [node])
 
 
 if __name__ == "__main__":
