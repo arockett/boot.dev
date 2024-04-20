@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 
 from markdown_blocks import markdown_to_html_node
 
@@ -16,6 +17,17 @@ def copy_files_recursive(source_dir_path, dest_dir_path):
             shutil.copy(from_path, dest_path)
         else:
             copy_files_recursive(from_path, dest_path)
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    for filename in os.listdir(dir_path_content):
+        path_content = os.path.join(dir_path_content, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        if os.path.isfile(path_content):
+            if path_content.endswith(".md"):
+                dest_path = Path(dest_path).with_suffix(".html")
+                generate_page(path_content, template_path, dest_path)
+        else:
+            generate_pages_recursive(path_content, template_path, dest_path)
 
 def generate_page(from_path, template_path, dest_path):
     print(f" * {from_path} {template_path} -> {dest_path}")
