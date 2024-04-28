@@ -2,8 +2,6 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 )
 
 type ListLocationsResp struct {
@@ -22,15 +20,7 @@ func (c *Client) ListLocations(pageUrl *string) (ListLocationsResp, error) {
 		url = *pageUrl
 	}
 
-	res, err := c.httpClient.Get(url)
-	if err != nil {
-		return ListLocationsResp{}, err
-	}
-	body, err := io.ReadAll(res.Body)
-	defer res.Body.Close()
-	if res.StatusCode > 299 {
-		return ListLocationsResp{}, fmt.Errorf("ListLocations failed with status code: %d", res.StatusCode)
-	}
+	body, err := c.CachedGet(url)
 	if err != nil {
 		return ListLocationsResp{}, err
 	}
