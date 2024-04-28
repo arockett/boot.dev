@@ -20,12 +20,7 @@ func NewCache(reapInterval time.Duration) Cache {
 		entries: make(map[string]cacheEntry),
 		mu:      &sync.Mutex{},
 	}
-	reapTimer := time.NewTimer(reapInterval)
-	go func() {
-		for range reapTimer.C {
-			cache.reap(reapInterval)
-		}
-	}()
+	go cache.reapLoop(reapInterval)
 	return cache
 }
 
@@ -45,10 +40,16 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	return entry.val, exists
 }
 
-func (c *Cache) reap(maxLifespan time.Duration) {
+func (c *Cache) reapLoop(maxLifespan time.Duration) {
+	timer := time.NewTimer(maxLifespan)
+	for range timer.C {
+		c.reap(time.Now(), maxLifespan)
+	}
+}
+
+func (c *Cache) reap(now time.Time, maxLifespan time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	now := time.Now()
 	for key, entry := range c.entries {
 		lifespan := now.Sub(entry.createdAt)
 		if lifespan > maxLifespan {
